@@ -7,7 +7,7 @@ nodes:
         hostPort: 8080
         protocol: TCP
       - containerPort: 30002
-        hostPort: 22
+        hostPort: 2222
         protocol: TCP
     labels:
       instance-group: "general-purpose"

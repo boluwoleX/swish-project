@@ -48,15 +48,16 @@ jobs:
 
       - name: Apply Kubernetes Manifests
         run: |
-          kubectl apply -f deployment.yaml
-          kubectl apply -f service.yaml
-          kubectl apply -f prom-stack.yaml
-          kubectl apply -f alertmanager-config.yaml
+          kubectl apply -f /home/runner/work/swish-project/swish-project/kube/deployment.yaml
+          kubectl apply -f /home/runner/work/swish-project/swish-project/kube/service.yaml
+          kubectl apply -f /home/runner/work/swish-project/swish-project/kube/prom-stack.yaml
+          kubectl apply -f /home/runner/work/swish-project/swish-project/kube/alertmanager-config.yaml
+
 
       - name: Expose Services
         run: |
           kubectl expose deployment dev-environment --type=NodePort --name=dev-environment-service --port=8080
-          kubectl expose deployment dev-environment --type=NodePort --name=dev-environment-ssh --port=22
+          kubectl expose deployment dev-environment --type=NodePort --name=dev-environment-ssh --port=2222
 
       - name: Monitor Resource Usage
         run: |
