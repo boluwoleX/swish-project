@@ -12,9 +12,14 @@ nodes:
     labels:
       instance-group: "general-purpose"
   - role: worker
-    taints:
-      - key: "memory-intensive"
-        value: "true"
-        effect: "NoSchedule"
+    kubeadmConfigPatches:
+      - |
+        kind: KubeletConfiguration
+        apiVersion: kubelet.config.k8s.io/v1beta1
+        evictionHard:
+          memory.available: "200Mi"
     labels:
       instance-group: "memory-intensive"
+    extraMounts:
+      - hostPath: /var/lib/docker
+        containerPath: /var/lib/docker
