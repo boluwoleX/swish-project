@@ -1,0 +1,20 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30001
+        hostPort: 8080
+        protocol: TCP
+      - containerPort: 30002
+        hostPort: 22
+        protocol: TCP
+    labels:
+      instance-group: "general-purpose"
+  - role: worker
+    taints:
+      - key: "memory-intensive"
+        value: "true"
+        effect: "NoSchedule"
+    labels:
+      instance-group: "memory-intensive"

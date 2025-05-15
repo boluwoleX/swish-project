@@ -1,0 +1,45 @@
+name: Kube Deploy Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-environment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set working directory to kube
+        working-directory: ./kube
+
+      - name: Build Docker image
+        run: |
+          docker build -t dev-env:latest -f dockerfile .
+
+      - name: Create kind cluster
+        run: |
+          kind create cluster --config kind-cluster-config.yaml
+
+      - name: Apply Kubernetes Manifests
+        run: |
+          kubectl apply -f deployment.yaml
+          kubectl apply -f service.yaml
+          kubectl apply -f prom-stack.yaml
+          kubectl apply -f alertmanager-config.yaml
+
+      - name: Expose Services
+        run: |
+          kubectl port-forward svc/dev-environment-service 8080:8080 &
+          kubectl port-forward svc/dev-environment-service 22:22 &
+          kubectl port-forward svc/prometheus-service 9090:9090 &
+
+      - name: Monitor Resource Usage
+        run: |
+          kubectl top pod dev-environment > usage_data.txt
+
+      - name: Upload Usage Data
+        uses: actions/upload-artifact@v3
+        with:
+          name: Usage Data
+          path: usage_data.txt

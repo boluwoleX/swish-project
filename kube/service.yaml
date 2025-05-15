@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: deploy-env-service
+spec:
+  selector:
+    app: deploy-env
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 30001
+  - protocol: TCP
+    port: 22
+    targetPort: 22
+    nodePort: 30002
+  type: NodePort

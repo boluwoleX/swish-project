@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |
+    route:
+      receiver: 'default'
+    receivers:
+      - name: 'default'
+        email_configs:
+        - to: 'drose@bulls.com'
+          from: 'mj@bulls.com'
+          smarthost: 'smtp.doesntexistandwont.com:587'
+          auth_username: 'antman'
+          auth_password: 'avengers'
