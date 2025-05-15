@@ -38,7 +38,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t dev-env:latest -f dockerfile .
+          docker build -t dev-env:latest -f Dockerfile .
 
       - name: Create kind cluster
         run: |
