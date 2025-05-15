@@ -9,7 +9,6 @@ on:
     branches:
       - main
 
-
 jobs:
   setup-environment:
     runs-on: ubuntu-latest
@@ -24,9 +23,19 @@ jobs:
         run: |
           docker build -t dev-env:latest -f dockerfile .
 
+      - name: Install kind and kubectl
+        run: |
+          sudo curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+          sudo chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+          sudo curl -Lo kubectl https://dl.k8s.io/release/v1.27.0/bin/linux/amd64/kubectl
+          sudo chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/kubectl
+
       - name: Create kind cluster
         run: |
           kind create cluster --config kind-cluster-config.yaml
+          kind get kubeconfig > $HOME/.kube/config
 
       - name: Apply Kubernetes Manifests
         run: |
@@ -37,9 +46,8 @@ jobs:
 
       - name: Expose Services
         run: |
-          kubectl port-forward svc/dev-environment-service 8080:8080 &
-          kubectl port-forward svc/dev-environment-service 22:22 &
-          kubectl port-forward svc/prometheus-service 9090:9090 &
+          kubectl expose deployment dev-environment --type=NodePort --name=dev-environment-service --port=8080
+          kubectl expose deployment dev-environment --type=NodePort --name=dev-environment-ssh --port=22
 
       - name: Monitor Resource Usage
         run: |
