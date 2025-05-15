@@ -45,11 +45,11 @@ jobs:
           kind create cluster --config /home/runner/work/swish-project/swish-project/kube/kind-cluster-config.yaml
           kind get kubeconfig > $HOME/.kube/config
 
-      - name: Install Prometheus Operator CRDs (Minimal Version)
+      - name: Install Prometheus Operator CRDs (Slim Version)
         run: |
           kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
           kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
-          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
+          curl -s https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml | sed '/annotations:/,/creationTimestamp:/d' | kubectl apply -f -
           kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
           kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
           kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
