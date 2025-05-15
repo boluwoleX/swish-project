@@ -38,7 +38,8 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t dev-env:latest -f Dockerfile .
+          docker build -t dev-env:latest -f /home/runner/work/swish-project/swish-project/kube/Dockerfile /home/runner/work/swish-project/swish-project/kube
+
 
       - name: Create kind cluster
         run: |
