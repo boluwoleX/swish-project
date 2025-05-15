@@ -2,13 +2,24 @@ name: Test Workflow
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  test-job:
+  setup-environment:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Echo Message
-        run: echo "GitHub Actions is working!"
+
+      - name: Set working directory to kube
+        working-directory: ./kube
+
+      - name: Build Docker image
+        run: |
+          docker build -t dev-env:latest -f dockerfile .
 
