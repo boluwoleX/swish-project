@@ -12,9 +12,17 @@ on:
 jobs:
   setup-environment:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set working directory to kube
+      - name: Verify kube directory exists
+        run: |
+          ls -l ./kube
+
+      - name: Set working directory to kube and list files
         working-directory: ./kube
+        run: |
+          pwd
+          ls -l
