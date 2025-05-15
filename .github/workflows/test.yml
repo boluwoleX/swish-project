@@ -18,8 +18,3 @@ jobs:
 
       - name: Set working directory to kube
         working-directory: ./kube
-
-      - name: Build Docker image
-        run: |
-          docker build -t dev-env:latest -f dockerfile .
-
