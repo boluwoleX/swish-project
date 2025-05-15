@@ -1,4 +1,4 @@
-name: Test Workflow
+name: Kube Deploy Workflow
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ on:
 jobs:
   setup-environment:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -40,15 +40,23 @@ jobs:
         run: |
           docker build -t dev-env:latest -f /home/runner/work/swish-project/swish-project/kube/Dockerfile /home/runner/work/swish-project/swish-project/kube
 
-
       - name: Create kind cluster
         run: |
           kind create cluster --config /home/runner/work/swish-project/swish-project/kube/kind-cluster-config.yaml
           kind get kubeconfig > $HOME/.kube/config
 
-      - name: Install Prometheus Operator CRDs
+      - name: Install Prometheus Operator CRDs (Minimal Version)
         run: |
-          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
+
+      - name: Deploy Prometheus Operator
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/bundle.yaml
 
       - name: Apply Kubernetes Manifests
         run: |
