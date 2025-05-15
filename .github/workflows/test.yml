@@ -62,7 +62,7 @@ jobs:
           kubectl top pod dev-environment > usage_data.txt
 
       - name: Upload Usage Data
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Usage Data
           path: usage_data.txt
