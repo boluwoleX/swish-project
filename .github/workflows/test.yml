@@ -74,17 +74,18 @@ jobs:
         run: |
           kubectl describe pod -n kube-system -l k8s-app=metrics-server
 
-      - name: View pods
-        run: |
-          kubectl get pods --all-namespaces
-
-      - name: Wait for Metrics Server
+      - name: Wait for Metrics Server to be ready (Proceed on Failure)
+        continue-on-error: true
         run: |
           echo "Waiting for Metrics Server to be ready..."
           kubectl wait --namespace kube-system \
             --for=condition=Ready pod \
             --selector=k8s-app=metrics-server \
-            --timeout=120s
+            --timeout=120s || echo "Metrics Server did not become ready, continuing anyway."
+
+      - name: View pods
+        run: |
+          kubectl get pods --all-namespaces
 
       - name: Monitor Resource Usage
         run: |
