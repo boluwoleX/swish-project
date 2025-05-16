@@ -81,8 +81,8 @@ jobs:
 
       - name: Inject CPU and Memory Requests
         run: |
-          sed -i 's/memory: "8Gi"/memory: "${{ inputs.memory_request }}"/g' /home/runner/work/swish-project/swish-project/kube/deployment.yaml
-          sed -i 's/cpu: "2"/cpu: "${{ inputs.cpu_request }}"/g' /home/runner/work/swish-project/swish-project/kube/deployment.yaml
+          sed -i "s/memory: \"8Gi\"/memory: \"${{ inputs.memory_request }}\"/g" /home/runner/work/swish-project/swish-project/kube/deployment.yaml
+          sed -i "s/cpu: \"2\"/cpu: \"${{ inputs.cpu_request }}\"/g" /home/runner/work/swish-project/swish-project/kube/deployment.yaml
 
       - name: Apply Kubernetes Manifests
         run: |
@@ -104,7 +104,7 @@ jobs:
       - name: Describe Deploy Env Pod
         run: |
           kubectl describe pod -n default -l app=deploy-env
-          
+
       - name: Wait for Metrics Server to be ready (Proceed on Failure)
         continue-on-error: true
         run: |
