@@ -44,7 +44,7 @@ jobs:
 
       - name: Tag and Push Docker Image to Docker Hub
         run: |
-          docker tag deploy-env:latest boluwole/dev-env:latest
+          docker tag deploy-env:latest boluwole/deploy-env:latest
           docker push boluwole/deploy-env:latest
 
       - name: Create kind cluster
