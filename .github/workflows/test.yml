@@ -73,10 +73,10 @@ jobs:
       - name: Describe Metrics Server Pods
         run: |
           kubectl describe pod -n kube-system -l k8s-app=metrics-server
-          
-      - name: Logs of Metrics Server
+
+      - name: View pods
         run: |
-          kubectl logs -n kube-system -l k8s-app=metrics-server --all-containers
+          kubectl get pods --all-namespaces
 
       - name: Wait for Metrics Server
         run: |
@@ -84,7 +84,7 @@ jobs:
           kubectl wait --namespace kube-system \
             --for=condition=Ready pod \
             --selector=k8s-app=metrics-server \
-            --timeout=60s
+            --timeout=120s
 
       - name: Monitor Resource Usage
         run: |
