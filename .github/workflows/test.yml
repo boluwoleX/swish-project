@@ -63,6 +63,14 @@ jobs:
           kubectl expose deployment deploy-env --type=NodePort --name=dev-environment-service --port=8080
           kubectl expose deployment deploy-env --type=NodePort --name=dev-environment-ssh --port=2222
 
+      - name: Install Metrics Server
+        run: |
+          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+          
+          # Patch the deployment to work in kind
+          kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
+
+
       - name: Monitor Resource Usage
         run: |
           kubectl top pod deploy-env > usage_data.txt
