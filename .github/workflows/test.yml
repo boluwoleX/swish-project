@@ -60,12 +60,12 @@ jobs:
 
       - name: Expose Services
         run: |
-          kubectl expose deployment dev-environment --type=NodePort --name=dev-environment-service --port=8080
-          kubectl expose deployment dev-environment --type=NodePort --name=dev-environment-ssh --port=2222
+          kubectl expose deployment deploy-env --type=NodePort --name=dev-environment-service --port=8080
+          kubectl expose deployment deploy-env --type=NodePort --name=dev-environment-ssh --port=2222
 
       - name: Monitor Resource Usage
         run: |
-          kubectl top pod dev-environment > usage_data.txt
+          kubectl top pod deploy-env > usage_data.txt
 
       - name: Upload Usage Data
         uses: actions/upload-artifact@v4
