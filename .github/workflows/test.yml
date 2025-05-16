@@ -53,10 +53,11 @@ jobs:
 
       - name: Build Docker image with Custom Base and Packages
         run: |
+          packages=$(echo "${{ inputs.packages }}" | tr ',' ' ')
           echo "FROM ${{ inputs.base_image }}" > Dockerfile
-          echo "RUN apt-get update && apt-get install -y ${{ inputs.packages }}" >> Dockerfile
+          echo "RUN apt-get update && apt-get install -y $packages" >> Dockerfile
           docker build -t boluwole/deploy-env:latest -f Dockerfile .
-
+         
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
