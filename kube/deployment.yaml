@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: deploy-env-container
-        image: deploy-env:latest
+        image: boluwole/deploy-env:latest
         ports:
         - containerPort: 22
         - containerPort: 8080
