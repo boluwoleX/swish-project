@@ -17,10 +17,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify kube directory exists
-        run: |
-          ls -l ./kube
-
       - name: Set working directory to kube and list files
         working-directory: ./kube
         run: |
@@ -77,13 +73,11 @@ jobs:
       - name: Install Metrics Server
         run: |
           kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-          
-          # Patch the deployment to work in kind
           kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
 
-      - name: Describe Metrics Server Pods
+      - name: Describe Deploy Env Pod
         run: |
-          kubectl describe pod -n kube-system -l k8s-app=metrics-server
+          kubectl describe pod -n default -l app=deploy-env
 
       - name: Wait for Metrics Server to be ready (Proceed on Failure)
         continue-on-error: true
