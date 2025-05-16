@@ -101,10 +101,10 @@ jobs:
           kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
           kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
 
-      - name: Describe Metrics Server Pods
+      - name: Describe Deploy Env Pod
         run: |
-          kubectl describe pod -n kube-system -l k8s-app=metrics-server
-
+          kubectl describe pod -n default -l app=deploy-env
+          
       - name: Wait for Metrics Server to be ready (Proceed on Failure)
         continue-on-error: true
         run: |
