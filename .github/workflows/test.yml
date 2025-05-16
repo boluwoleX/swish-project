@@ -1,3 +1,4 @@
+
 name: Kube Deploy Workflow
 
 on:
@@ -22,7 +23,6 @@ jobs:
         run: |
           pwd
           ls -l
-
       - name: Install kind and kubectl
         run: |
           sudo curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
@@ -31,11 +31,9 @@ jobs:
           sudo curl -Lo kubectl https://dl.k8s.io/release/v1.27.0/bin/linux/amd64/kubectl
           sudo chmod +x kubectl
           sudo mv kubectl /usr/local/bin/kubectl
-
       - name: Build Docker image
         run: |
           docker build -t deploy-env:latest -f /home/runner/work/swish-project/swish-project/kube/Dockerfile /home/runner/work/swish-project/swish-project/kube
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -44,40 +42,34 @@ jobs:
 
       - name: Tag and Push Docker Image to Docker Hub
         run: |
+          docker tag deploy-env:latest boluwole/deploy-env:latest
           docker push boluwole/deploy-env:latest
-
       - name: Create kind cluster
         run: |
           kind create cluster --config /home/runner/work/swish-project/swish-project/kube/kind-cluster-config.yaml
           kind get kubeconfig > $HOME/.kube/config
-
       - name: Install Prometheus Operator with Helm
         run: |
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo update
           helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
-
       - name: Apply Kubernetes Manifests
         run: |
           kubectl apply -f /home/runner/work/swish-project/swish-project/kube/deployment.yaml
           kubectl apply -f /home/runner/work/swish-project/swish-project/kube/service.yaml
           kubectl apply -f /home/runner/work/swish-project/swish-project/kube/prom-stack.yaml
           kubectl apply -f /home/runner/work/swish-project/swish-project/kube/alertmanager-config.yaml
-
       - name: Expose Services
         run: |
           kubectl expose deployment deploy-env --type=NodePort --name=dev-environment-service --port=8080
           kubectl expose deployment deploy-env --type=NodePort --name=dev-environment-ssh --port=2222
-
       - name: Install Metrics Server
         run: |
           kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
           kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
-
       - name: Describe Deploy Env Pod
         run: |
           kubectl describe pod -n default -l app=deploy-env
-
       - name: Wait for Metrics Server to be ready (Proceed on Failure)
         continue-on-error: true
         run: |
@@ -86,11 +78,9 @@ jobs:
             --for=condition=Ready pod \
             --selector=k8s-app=metrics-server \
             --timeout=120s || echo "Metrics Server did not become ready, continuing anyway."
-
       - name: View pods
         run: |
           kubectl get pods --all-namespaces
-
       - name: Monitor Resource Usage
         continue-on-error: true
         run: |
@@ -98,7 +88,6 @@ jobs:
           POD_NAME=$(kubectl get pods -n default -l app=deploy-env -o jsonpath="{.items[0].metadata.name}")
           echo "Pod name found: $POD_NAME"
           kubectl top pod $POD_NAME -n default > usage_data.txt || echo "Pod not ready for metrics"
-
       - name: Upload Usage Data
         uses: actions/upload-artifact@v4
         with:
