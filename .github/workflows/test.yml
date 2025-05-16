@@ -99,8 +99,12 @@ jobs:
           kubectl get pods --all-namespaces
 
       - name: Monitor Resource Usage
+        continue-on-error: true
         run: |
-          kubectl top pod deploy-env > usage_data.txt
+          echo "Getting exact pod name..."
+          POD_NAME=$(kubectl get pods -n default -l app=deploy-env -o jsonpath="{.items[0].metadata.name}")
+          echo "Pod name found: $POD_NAME"
+          kubectl top pod $POD_NAME -n default > usage_data.txt || echo "Pod not ready for metrics"
 
       - name: Upload Usage Data
         uses: actions/upload-artifact@v4
