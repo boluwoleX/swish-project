@@ -2,12 +2,27 @@ name: Kube Deploy Workflow
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    inputs:
+      base_image:
+        description: 'Select the Base Image (e.g., ubuntu:20.04, node:14, python:3.9)'
+        required: true
+        default: 'ubuntu:20.04'
+      packages:
+        description: 'Comma-separated list of packages to install (e.g., curl, vim, git)'
+        required: true
+        default: 'curl,vim,git'
+      memory_request:
+        description: 'Memory Request (e.g., 8Gi)'
+        required: true
+        default: '8Gi'
+      cpu_request:
+        description: 'CPU Request (e.g., 2)'
+        required: true
+        default: '2'
+      gpu_request:
+        description: 'GPU Request (e.g., 1)'
+        required: false
+        default: '0'
 
 jobs:
   setup-environment:
@@ -16,6 +31,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Verify kube directory exists
+        run: |
+          ls -l ./kube
 
       - name: Set working directory to kube and list files
         working-directory: ./kube
@@ -32,9 +51,11 @@ jobs:
           sudo chmod +x kubectl
           sudo mv kubectl /usr/local/bin/kubectl
 
-      - name: Build Docker image
+      - name: Build Docker image with Custom Base and Packages
         run: |
-          docker build -t deploy-env:latest -f /home/runner/work/swish-project/swish-project/kube/Dockerfile /home/runner/work/swish-project/swish-project/kube
+          echo "FROM ${{ inputs.base_image }}" > Dockerfile
+          echo "RUN apt-get update && apt-get install -y ${{ inputs.packages }}" >> Dockerfile
+          docker build -t boluwole/deploy-env:latest -f Dockerfile .
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -42,7 +63,7 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUBPW }}
 
-      - name: Tag and Push Docker Image to Docker Hub
+      - name: Push Docker Image to Docker Hub
         run: |
           docker push boluwole/deploy-env:latest
 
@@ -56,6 +77,11 @@ jobs:
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo update
           helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
+
+      - name: Inject CPU and Memory Requests
+        run: |
+          sed -i 's/memory: "8Gi"/memory: "${{ inputs.memory_request }}"/g' /home/runner/work/swish-project/swish-project/kube/deployment.yaml
+          sed -i 's/cpu: "2"/cpu: "${{ inputs.cpu_request }}"/g' /home/runner/work/swish-project/swish-project/kube/deployment.yaml
 
       - name: Apply Kubernetes Manifests
         run: |
@@ -74,9 +100,9 @@ jobs:
           kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
           kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
 
-      - name: Describe Deploy Env Pod
+      - name: Describe Metrics Server Pods
         run: |
-          kubectl describe pod -n default -l app=deploy-env
+          kubectl describe pod -n kube-system -l k8s-app=metrics-server
 
       - name: Wait for Metrics Server to be ready (Proceed on Failure)
         continue-on-error: true
@@ -92,9 +118,7 @@ jobs:
           kubectl get pods --all-namespaces
 
       - name: Monitor Resource Usage
-        continue-on-error: true
         run: |
-          echo "Getting exact pod name..."
           POD_NAME=$(kubectl get pods -n default -l app=deploy-env -o jsonpath="{.items[0].metadata.name}")
           echo "Pod name found: $POD_NAME"
           kubectl top pod $POD_NAME -n default > usage_data.txt || echo "Pod not ready for metrics"
