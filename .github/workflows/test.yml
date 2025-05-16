@@ -96,23 +96,36 @@ jobs:
           kubectl expose deployment deploy-env --type=NodePort --name=dev-environment-service --port=8080
           kubectl expose deployment deploy-env --type=NodePort --name=dev-environment-ssh --port=2222
 
-      - name: Install Metrics Server
-        run: |
-          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-          kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
+#      - name: Install Metrics Server
+#        run: |
+#          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+#          kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
 
       - name: Describe Deploy Env Pod
         run: |
           kubectl describe pod -n default -l app=deploy-env
 
-      - name: Wait for Metrics Server to be ready (Proceed on Failure)
-        continue-on-error: true
+      - name: Get Logs from Previous Pod Run
         run: |
-          echo "Waiting for Metrics Server to be ready..."
-          kubectl wait --namespace kube-system \
-            --for=condition=Ready pod \
-            --selector=k8s-app=metrics-server \
-            --timeout=120s || echo "Metrics Server did not become ready, continuing anyway."
+          POD_NAME=$(kubectl get pods -n default -l app=deploy-env -o jsonpath="{.items[0].metadata.name}")
+          echo "Fetching previous logs for $POD_NAME"
+          kubectl logs $POD_NAME -n default --previous || echo "No previous logs available"
+
+      - name: Get Pod Events
+        run: |
+          POD_NAME=$(kubectl get pods -n default -l app=deploy-env -o jsonpath="{.items[0].metadata.name}")
+          echo "Events for $POD_NAME"
+          kubectl get events --sort-by='.lastTimestamp' -n default
+
+
+#      - name: Wait for Metrics Server to be ready (Proceed on Failure)
+ #       continue-on-error: true
+ #       run: |
+ #         echo "Waiting for Metrics Server to be ready..."
+ #         kubectl wait --namespace kube-system \
+#            --for=condition=Ready pod \
+#            --selector=k8s-app=metrics-server \
+#            --timeout=120s || echo "Metrics Server did not become ready, continuing anyway."
 
       - name: View pods
         run: |
@@ -124,8 +137,8 @@ jobs:
           echo "Pod name found: $POD_NAME"
           kubectl top pod $POD_NAME -n default > usage_data.txt || echo "Pod not ready for metrics"
 
-      - name: Upload Usage Data
-        uses: actions/upload-artifact@v4
-        with:
-          name: Usage Data
-          path: usage_data.txt
+#      - name: Upload Usage Data
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: Usage Data
+#          path: usage_data.txt
