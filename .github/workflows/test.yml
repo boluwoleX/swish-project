@@ -49,9 +49,11 @@ jobs:
         run: |
           kubectl apply --kustomize https://github.com/prometheus-operator/prometheus-operator/config/k8s
 
-      - name: Deploy Prometheus Operator
+      - name: Install Prometheus Operator via Helm
         run: |
-          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.64/bundle.yaml
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+          helm install prometheus-operator prometheus-community/kube-prometheus-stack
 
       - name: Apply Kubernetes Manifests
         run: |
