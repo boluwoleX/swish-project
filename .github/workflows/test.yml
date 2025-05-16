@@ -2,27 +2,12 @@ name: Kube Deploy Workflow
 
 on:
   workflow_dispatch:
-    inputs:
-      base_image:
-        description: 'Select the Base Image (e.g., ubuntu:20.04, node:14, python:3.9)'
-        required: true
-        default: 'ubuntu:20.04'
-      packages:
-        description: 'Comma-separated list of packages to install (e.g., curl, vim, git)'
-        required: true
-        default: 'curl,vim,git'
-      memory_request:
-        description: 'Memory Request (e.g., 8Gi)'
-        required: true
-        default: '8Gi'
-      cpu_request:
-        description: 'CPU Request (e.g., 2)'
-        required: true
-        default: '2'
-      gpu_request:
-        description: 'GPU Request (e.g., 1)'
-        required: false
-        default: '0'
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   setup-environment:
@@ -31,10 +16,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Verify kube directory exists
-        run: |
-          ls -l ./kube
 
       - name: Set working directory to kube and list files
         working-directory: ./kube
@@ -51,20 +32,17 @@ jobs:
           sudo chmod +x kubectl
           sudo mv kubectl /usr/local/bin/kubectl
 
-      - name: Build Docker image with Custom Base and Packages
+      - name: Build Docker image
         run: |
-          packages=$(echo "${{ inputs.packages }}" | tr ',' ' ')
-          echo "FROM ${{ inputs.base_image }}" > Dockerfile
-          echo "RUN apt-get update && apt-get install -y $packages" >> Dockerfile
-          docker build -t boluwole/deploy-env:latest -f Dockerfile .
-         
+          docker build -t deploy-env:latest -f /home/runner/work/swish-project/swish-project/kube/Dockerfile /home/runner/work/swish-project/swish-project/kube
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUBPW }}
 
-      - name: Push Docker Image to Docker Hub
+      - name: Tag and Push Docker Image to Docker Hub
         run: |
           docker push boluwole/deploy-env:latest
 
@@ -79,11 +57,6 @@ jobs:
           helm repo update
           helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
 
-      - name: Inject CPU and Memory Requests
-        run: |
-          sed -i "s/memory: \"8Gi\"/memory: \"${{ inputs.memory_request }}\"/g" /home/runner/work/swish-project/swish-project/kube/deployment.yaml
-          sed -i "s/cpu: \"2\"/cpu: \"${{ inputs.cpu_request }}\"/g" /home/runner/work/swish-project/swish-project/kube/deployment.yaml
-
       - name: Apply Kubernetes Manifests
         run: |
           kubectl apply -f /home/runner/work/swish-project/swish-project/kube/deployment.yaml
@@ -96,54 +69,38 @@ jobs:
           kubectl expose deployment deploy-env --type=NodePort --name=dev-environment-service --port=8080
           kubectl expose deployment deploy-env --type=NodePort --name=dev-environment-ssh --port=2222
 
-#      - name: Install Metrics Server
-#        run: |
-#          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-#          kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
-      - name: Wait for Pod to Start
+      - name: Install Metrics Server
         run: |
-          echo "Waiting for 30 seconds for the pod to start..."
-          sleep 30
-
+          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+          kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
 
       - name: Describe Deploy Env Pod
         run: |
           kubectl describe pod -n default -l app=deploy-env
 
-      - name: Get Logs from Previous Pod Run
+      - name: Wait for Metrics Server to be ready (Proceed on Failure)
+        continue-on-error: true
         run: |
-          POD_NAME=$(kubectl get pods -n default -l app=deploy-env -o jsonpath="{.items[0].metadata.name}")
-          echo "Fetching previous logs for $POD_NAME"
-          kubectl logs $POD_NAME -n default --previous || echo "No previous logs available"
-
-      - name: Get Pod Events
-        run: |
-          POD_NAME=$(kubectl get pods -n default -l app=deploy-env -o jsonpath="{.items[0].metadata.name}")
-          echo "Events for $POD_NAME"
-          kubectl get events --sort-by='.lastTimestamp' -n default
-
-
-#      - name: Wait for Metrics Server to be ready (Proceed on Failure)
- #       continue-on-error: true
- #       run: |
- #         echo "Waiting for Metrics Server to be ready..."
- #         kubectl wait --namespace kube-system \
-#            --for=condition=Ready pod \
-#            --selector=k8s-app=metrics-server \
-#            --timeout=120s || echo "Metrics Server did not become ready, continuing anyway."
+          echo "Waiting for Metrics Server to be ready..."
+          kubectl wait --namespace kube-system \
+            --for=condition=Ready pod \
+            --selector=k8s-app=metrics-server \
+            --timeout=120s || echo "Metrics Server did not become ready, continuing anyway."
 
       - name: View pods
         run: |
           kubectl get pods --all-namespaces
 
       - name: Monitor Resource Usage
+        continue-on-error: true
         run: |
+          echo "Getting exact pod name..."
           POD_NAME=$(kubectl get pods -n default -l app=deploy-env -o jsonpath="{.items[0].metadata.name}")
           echo "Pod name found: $POD_NAME"
           kubectl top pod $POD_NAME -n default > usage_data.txt || echo "Pod not ready for metrics"
 
-#      - name: Upload Usage Data
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: Usage Data
-#          path: usage_data.txt
+      - name: Upload Usage Data
+        uses: actions/upload-artifact@v4
+        with:
+          name: Usage Data
+          path: usage_data.txt
