@@ -18,7 +18,7 @@ This GitHub Action workflow automates the deployment of a Docker-based Kubernete
 
 ---
 
-## 📌 **Workflow Overview**
+##  **Workflow Overview**
 The workflow performs the following steps:
 1. **Checkout Repository** - Retrieves the project code.
 2. **Install Dependencies** - Installs `kind`, `kubectl`, and `helm`.
@@ -44,7 +44,7 @@ The workflow performs the following steps:
 
 ---
 
-## 🚀 **Run the Workflow**
+##  **Run the Workflow**
 Trigger the workflow manually with the required inputs:
 ```bash
 gh workflow run kube-deploy-workflow.yml \
@@ -56,7 +56,7 @@ gh workflow run kube-deploy-workflow.yml \
 
 ---
 
-## 📂 **Generated Dockerfile**
+##  **Generated Dockerfile**
 Below is a sample Dockerfile that gets generated during the workflow:
 
 ```dockerfile
@@ -83,7 +83,7 @@ CMD ["/usr/sbin/sshd", "-D"]
 
 ---
 
-## 🔗 **Services Exposed**
+##  **Services Exposed**
 | Service Name                | Type      | Port |
 |----------------------------- |-----------|------|
 | `dev-environment-service`   | NodePort  | 8080 |
@@ -91,7 +91,7 @@ CMD ["/usr/sbin/sshd", "-D"]
 
 ---
 
-## 📊 **Monitoring Setup**
+##  **Monitoring Setup**
 Prometheus Operator is deployed for real-time monitoring. Access it by running:
 ```bash
 kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090
@@ -100,30 +100,30 @@ Access Prometheus at: [http://localhost:9090](http://localhost:9090)
 
 ---
 
-## 📈 **Resource Monitoring**
+## **Resource Monitoring**
 Resource consumption is collected during the workflow and uploaded as an artifact:
 - **Usage Data:** Viewable in the GitHub Actions artifacts section.
 
 ---
 
-## 📝 **To-Do / Improvements**
+##  **To-Do / Improvements**
 - [ ] Integrate Grafana for better visualization.
 - [ ] Automate port-forwarding for Prometheus and Grafana.
 - [ ] Implement cleanup for stale `kind` clusters.
 
 ---
 
-## 🧑‍💻 **Contributing**
+##  **Contributing**
 Feel free to open a PR for improvements or report issues in the repository.
 
 ---
 
-## 📜 **License**
+##  **License**
 MIT License - see [LICENSE](./LICENSE) for more details.
 
 ---
 
-## 📝 **DevSecOps Test Solutions**
+##  **DevSecOps Test Solutions**
 
 ### **1. Docker Image Creation**
 The image was created with `python2`, `python3`, and `R`. It includes all necessary dependencies and is uploaded to Docker Hub. The Dockerfile includes multi-stage builds to optimize image size.
