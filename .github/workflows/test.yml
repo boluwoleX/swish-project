@@ -110,9 +110,11 @@ jobs:
         run: |
           kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
           kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
+          
       - name: Describe Deploy Env Pod
         run: |
           kubectl describe pod -n default -l app=deploy-env
+
       - name: Wait for Metrics Server to be ready (Proceed on Failure)
         continue-on-error: true
         run: |
@@ -125,6 +127,7 @@ jobs:
       - name: View pods
         run: |
           kubectl get pods --all-namespaces
+
       - name: Monitor Resource Usage
         continue-on-error: true
         run: |
@@ -132,6 +135,7 @@ jobs:
           POD_NAME=$(kubectl get pods -n default -l app=deploy-env -o jsonpath="{.items[0].metadata.name}")
           echo "Pod name found: $POD_NAME"
           kubectl top pod $POD_NAME -n default > usage_data.txt || echo "Pod not ready for metrics"
+
       - name: Upload Usage Data
         uses: actions/upload-artifact@v4
         with:

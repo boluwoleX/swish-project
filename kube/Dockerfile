@@ -1,4 +1,8 @@
-FROM ubuntu:24.04
+FROM ubuntu:20.04
+
+
+ENV DEBIAN_FRONTEND=noninteractive
+
 
 RUN apt-get update && apt-get install -y \
     software-properties-common \
@@ -7,13 +11,16 @@ RUN apt-get update && apt-get install -y \
     wget \
     gnupg2 \
     apt-transport-https \
-    ca-certificates \
-    openssh-server
+    ca-certificates
 
-RUN mkdir /var/run/sshd && \
-    echo 'root:root' | chpasswd && \
-    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
-EXPOSE 22
+RUN apt-get install -y python2 python2-dev python3 python3-dev python3-pip
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
+    add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' && \
+    apt-get update && apt-get install -y --no-install-recommends r-base
 
-CMD ["/usr/sbin/sshd", "-D"]
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+
+CMD ["tail", "-f", "/dev/null"]
