@@ -52,7 +52,7 @@ jobs:
 
       - name: Create kind cluster
         run: |
-          kind create cluster --name deploy-env-cluster
+          kind create cluster --config /home/runner/work/swish-project/swish-project/kube/kind-cluster-config.yaml
           kind get kubeconfig > $HOME/.kube/config
 
       - name: Deploy to Kubernetes
