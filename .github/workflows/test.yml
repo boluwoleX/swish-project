@@ -86,10 +86,15 @@ jobs:
           kind create cluster --config /home/runner/work/swish-project/swish-project/kube/kind-cluster-config.yaml
           kind get kubeconfig > $HOME/.kube/config
 
+      - name: Install Prometheus Operator with Helm
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+          helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
+
       - name: Deploy to Kubernetes with Resource Requests
         run: |
           kubectl apply -f /home/runner/work/swish-project/swish-project/kube/service.yaml
-          kubectl apply -f /home/runner/work/swish-project/swish-project/kube/prom-stack.yaml
           kubectl apply -f /home/runner/work/swish-project/swish-project/kube/alertmanager-config.yaml        
           kubectl apply -f /home/runner/work/swish-project/swish-project/kube/deployment.yaml
           kubectl set resources deployment deploy-env \
