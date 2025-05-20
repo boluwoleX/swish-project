@@ -47,7 +47,9 @@ jobs:
         working-directory: /home/runner/work/swish-project/swish-project/kube
         run: |
           echo "FROM ${{ github.event.inputs.base_image }}" > Dockerfile
-          echo "RUN apt-get update && apt-get install -y ${{ github.event.inputs.packages | replace(',', ' ') }} && apt-get clean && rm -rf /var/lib/apt/lists/*" >> Dockerfile
+          packages="${{ github.event.inputs.packages }}"
+          packages="${packages//,/ }"  # Replace commas with spaces
+          echo "RUN apt-get update && apt-get install -y $packages && apt-get clean && rm -rf /var/lib/apt/lists/*" >> Dockerfile
           echo "" >> Dockerfile
           echo "# Install necessary packages" >> Dockerfile
           echo "RUN apt-get update && apt-get install -y openssh-server" >> Dockerfile
@@ -61,7 +63,7 @@ jobs:
           echo "" >> Dockerfile
           echo "# Start the SSH server" >> Dockerfile
           echo 'CMD ["/usr/sbin/sshd", "-D"]' >> Dockerfile
-
+          
       - name: Build Docker image
         working-directory: /home/runner/work/swish-project/swish-project/kube
         run: |
