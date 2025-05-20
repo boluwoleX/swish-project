@@ -1,4 +1,18 @@
-# Kube Deploy Workflow
+# Dockerfile Deploy workflow kube-action.yml
+This repo includes an automated CI/CD pipeline defined in `.github/workflows/kube-action.yml` that:
+
+1. **Builds a Docker image** with Python2, Python3, and R, then pushes it to Docker Hub (`boluwole/deploy-env:latest`).
+2. **Logs build time** to an artifact and suggests improvements (layer caching, pinning versions).
+3. **Scans for CVEs** using Trivy and uploads a vulnerability report.
+4. **Deploys the image** to a local Kubernetes cluster via `kind`, with a long-running `tail -f /dev/null` command.
+5. **Exposes the deployment** via a Kubernetes `NodePort` service on port 8080.
+6. **Automates all steps** using GitHub Actions (triggered on push or manual dispatch).
+7. **Adds monitoring hooks** (Prometheus `ServiceMonitor` + alert rules) for pod health and memory usage.
+
+All logic lives in `kube-action.yml`. This setup covers secure build, deploy, and observability in a minimal dev cluster.
+
+
+# Kube Deploy Workflow test.yml
 
 This GitHub Action workflow automates the deployment of a Docker-based Kubernetes environment, provisioning Prometheus monitoring, and exposing essential services for both application and SSH access.
 
