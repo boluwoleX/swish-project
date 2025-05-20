@@ -74,7 +74,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUBPW }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Tag and Push Docker Image to Docker Hub
         run: |
@@ -110,7 +110,7 @@ jobs:
         run: |
           kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
           kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
-          
+
       - name: Describe Deploy Env Pod
         run: |
           kubectl describe pod -n default -l app=deploy-env
